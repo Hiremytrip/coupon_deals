@@ -1,0 +1,303 @@
+/* Main Styles */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+/* Header Styles */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-nav .nav-link {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+}
+
+/* Hero Section */
+.hero-section {
+  background-color: #f8f9fa;
+  padding: 2rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Coupon Card Styles */
+.coupon-card {
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.coupon-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.coupon-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+}
+
+.coupon-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  background: white;
+  border-radius: 50%;
+  padding: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-top: -30px;
+  position: relative;
+  border: 3px solid white;
+}
+
+.coupon-discount {
+  background-color: #dc3545;
+  color: white;
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.coupon-cashback {
+  background-color: #0d6efd;
+  color: white;
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.coupon-code {
+  background-color: #f8f9fa;
+  border: 1px dashed #ced4da;
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.coupon-code:hover {
+  background-color: #e9ecef;
+}
+
+/* Store Card Styles */
+.store-card {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.store-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.store-logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+/* How It Works Section */
+.how-it-works-card {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  height: 100%;
+}
+
+.how-it-works-card:hover {
+  transform: translateY(-5px);
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Carousel Styles */
+.carousel-item {
+  height: 300px;
+}
+
+.carousel-item img {
+  object-fit: cover;
+  height: 100%;
+}
+
+/* Dashboard Styles */
+.dashboard-card {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Admin Panel Styles */
+.admin-sidebar {
+  background-color: #343a40;
+  color: white;
+  min-height: calc(100vh - 56px);
+}
+
+.admin-sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar .nav-link i {
+  width: 20px;
+  text-align: center;
+  margin-right: 0.5rem;
+}
+
+/* Form Styles */
+.form-control:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+/* Responsive Styles */
+@media (max-width: 767.98px) {
+  .carousel-item {
+    height: 200px;
+  }
+}
+
+/* Footer Styles */
+footer {
+  background-color: #1a1a1a;
+}
+
+footer .hover-opacity {
+  transition: opacity 0.3s ease;
+}
+
+footer .hover-opacity:hover {
+  opacity: 0.8;
+}
+
+footer .bg-secondary.bg-opacity-25 {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+footer .bg-secondary.bg-opacity-25:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Add these new styles for better USA brand presentation */
+
+/* Store Logo Styles */
+.store-logo-large {
+  max-height: 200px;
+  max-width: 200px;
+  object-fit: contain;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* USA Badge Styles */
+.usa-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #dc3545;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Store Card USA Enhancement */
+.store-card .usa-flag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.2rem;
+  color: #dc3545;
+}
+
+/* Featured Deal Card Styles */
+.featured-deal-card {
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.featured-deal-card:hover {
+  transform: translateY(-5px);
+}
+
+.featured-deal-image {
+  height: 200px;
+  object-fit: cover;
+}
+
+/* Category Card Styles */
+.category-card {
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Store Logo Small */
+.store-logo-small {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+/* Section Transitions */
+section {
+  scroll-margin-top: 80px;
+}
+
+/* Smooth Scroll Behavior */
+html {
+  scroll-behavior: smooth;
+}
+
