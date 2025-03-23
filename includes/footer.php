@@ -6,7 +6,7 @@
                 <div class="col-md-3 mb-4">
                     <div class="bg-secondary bg-opacity-25 p-3 rounded h-100">
                         <h5 class="mb-3 text-white">About CouponDeals</h5>
-                        <p class="text-light">CouponDeals is India's trusted coupons, offers & cashback website. Save money on your online shopping with our verified coupons and earn cashback.</p>
+                        <p class="text-light">CouponDeals is  trusted coupons, offers & cashback website. Save money on your online shopping with our verified coupons and earn cashback.</p>
                         <div class="social-links">
                             <a href="#" class="text-white me-3 hover-opacity"><i class="fab fa-facebook-f"></i></a>
                             <a href="#" class="text-white me-3 hover-opacity"><i class="fab fa-twitter"></i></a>

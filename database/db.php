@@ -10,24 +10,28 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection
 if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
 
-// Function to sanitize input data
-function sanitize($data) {
-  global $conn;
-  return mysqli_real_escape_string($conn, htmlspecialchars(trim($data)));
+// Prevent function redeclaration
+if (!function_exists('sanitize')) {
+    function sanitize($data) {
+        global $conn;
+        return mysqli_real_escape_string($conn, htmlspecialchars(trim($data)));
+    }
 }
 
 // Function to generate random string
-function generateRandomString($length = 10) {
-  $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  $charactersLength = strlen($characters);
-  $randomString = '';
-  for ($i = 0; $i < $length; $i++) {
-      $randomString .= $characters[rand(0, $charactersLength - 1)];
-  }
-  return $randomString;
+if (!function_exists('generateRandomString')) {
+    function generateRandomString($length = 10) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
 }
 
 // Add American brands if they don't exist

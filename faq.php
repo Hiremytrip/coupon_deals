@@ -35,7 +35,7 @@
                             </h2>
                             <div id="generalCollapse1" class="accordion-collapse collapse show" aria-labelledby="general1" data-bs-parent="#generalFAQ">
                                 <div class="accordion-body">
-                                    CouponDeals is India's trusted coupons, offers, and cashback website. We help you save money on your online shopping by providing the latest coupons, deals, and cashback offers from your favorite stores.
+                                    CouponDeals is  trusted coupons, offers, and cashback website. We help you save money on your online shopping by providing the latest coupons, deals, and cashback offers from your favorite stores.
                                 </div>
                             </div>
                         </div>

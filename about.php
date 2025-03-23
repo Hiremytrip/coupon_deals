@@ -4,7 +4,7 @@
 <section class="py-4 bg-light">
     <div class="container">
         <h1 class="mb-0">About CouponDeals</h1>
-        <p class="lead">India's trusted coupons, offers & cashback website</p>
+        <p class="lead"> trusted coupons, offers & cashback website</p>
     </div>
 </section>
 
@@ -15,7 +15,7 @@
             <div class="col-md-6">
                 <h2>Our Story</h2>
                 <p>CouponDeals was founded in 2023 with a simple mission: to help people save money on their online shopping. We believe that everyone deserves to get the best deals and earn rewards for their purchases.</p>
-                <p>What started as a small project has grown into one of India's most trusted coupon and cashback platforms, helping thousands of shoppers save money every day.</p>
+                <p>What started as a small project has grown into one of  most trusted coupon and cashback platforms, helping thousands of shoppers save money every day.</p>
             </div>
             <div class="col-md-6 text-center">
                 <i class="fas fa-shopping-bag fa-10x text-danger opacity-25"></i>

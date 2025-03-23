@@ -53,7 +53,8 @@
                         echo '<a href="' . $row['website_url'] . '" target="_blank" class="btn btn-danger get-coupon-btn" data-coupon-id="' . $row['id'] . '" data-coupon-code="' . $row['coupon_code'] . '" data-store-url="' . $row['website_url'] . '">Get Deal</a>';
                         echo '</div>';
                         echo '</div>';
-                        echo '<div class="col-md-6 text-center">';
+
+                        echo '<div class="col-md-6 text-center d-none d-md-block">'; // Hide image on mobile
                         if (!empty($row['image'])) {
                             echo '<img src="assets/images/coupons/' . $row['image'] . '" alt="' . $row['title'] . '" class="img-fluid rounded">';
                         } else {
@@ -193,59 +194,62 @@
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     ?>
-                    <!-- Update the coupon card display -->
-                    <div class="col-md-4 mb-4">
-                        <div class="card coupon-card h-100">
-                            <?php if (!empty($row['image'])): ?>
-                                <img src="assets/images/coupons/<?php echo $row['image']; ?>" alt="<?php echo $row['title']; ?>" class="coupon-image">
-                                <div class="usa-badge">
-                                    <i class="fas fa-flag-usa"></i>
-                                    <span>US Deal</span>
-                                </div>
-                            <?php endif; ?>
-                            <div class="card-body">
-                                <div class="d-flex align-items-center mb-3">
-                                    <img src="assets/images/stores/<?php echo $row['store_logo']; ?>" alt="<?php echo $row['store_name']; ?>" class="coupon-logo">
-                                    <div class="ms-3">
-                                        <h5 class="card-title mb-0"><?php echo $row['store_name']; ?></h5>
-                                        <small class="text-muted">Official US Store</small>
-                                    </div>
-                                </div>
-                                <h6><?php echo $row['title']; ?></h6>
-                                
-                                <?php if ($row['discount_type'] == 'percentage'): ?>
-                                    <div class="coupon-discount mb-2">Up to <?php echo $row['discount_value']; ?>% Off</div>
-                                <?php elseif ($row['discount_type'] == 'fixed'): ?>
-                                    <div class="coupon-discount mb-2">$<?php echo $row['discount_value']; ?> Off</div>
-                                <?php elseif ($row['discount_type'] == 'cashback'): ?>
-                                    <div class="coupon-cashback mb-2">Up to <?php echo $row['discount_value']; ?>% Cashback</div>
-                                <?php endif; ?>
-                                
-                                <p class="card-text small text-muted mb-3"><?php echo substr($row['description'], 0, 100); ?>...</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <?php if (!empty($row['coupon_code'])): ?>
-                                        <span class="coupon-code"><?php echo $row['coupon_code']; ?></span>
-                                    <?php else: ?>
-                                        <span class="text-muted">No Code Required</span>
-                                    <?php endif; ?>
-                                    
-                                    <a href="<?php echo $row['website_url']; ?>" target="_blank" class="btn btn-sm btn-danger get-coupon-btn" 
-                                       data-coupon-id="<?php echo $row['id']; ?>" 
-                                       data-coupon-code="<?php echo $row['coupon_code']; ?>" 
-                                       data-store-url="<?php echo $row['website_url']; ?>">
-                                        Get Deal
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-white text-muted small">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span>Expires: <?php echo date('M d, Y', strtotime($row['expiry_date'])); ?></span>
-                                    <span><i class="fas fa-users me-1"></i> <?php echo rand(10, 100); ?> used today</span>
-                                </div>
+            <!-- Update the coupon card display -->
+            <div class="col-md-4 mb-4">
+                <div class="card coupon-card h-100">
+                    <?php if (!empty($row['image'])): ?>
+                    <img src="assets/images/coupons/<?php echo $row['image']; ?>" alt="<?php echo $row['title']; ?>"
+                        class="coupon-image">
+                    <div class="usa-badge">
+                        <i class="fas fa-flag-usa"></i>
+                        <span>US Deal</span>
+                    </div>
+                    <?php endif; ?>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="assets/images/stores/<?php echo $row['store_logo']; ?>"
+                                alt="<?php echo $row['store_name']; ?>" class="coupon-logo">
+                            <div class="ms-3">
+                                <h5 class="card-title mb-0"><?php echo $row['store_name']; ?></h5>
+                                <small class="text-muted">Official US Store</small>
                             </div>
                         </div>
+                        <h6><?php echo $row['title']; ?></h6>
+
+                        <?php if ($row['discount_type'] == 'percentage'): ?>
+                        <div class="coupon-discount mb-2">Up to <?php echo $row['discount_value']; ?>% Off</div>
+                        <?php elseif ($row['discount_type'] == 'fixed'): ?>
+                        <div class="coupon-discount mb-2">$<?php echo $row['discount_value']; ?> Off</div>
+                        <?php elseif ($row['discount_type'] == 'cashback'): ?>
+                        <div class="coupon-cashback mb-2">Up to <?php echo $row['discount_value']; ?>% Cashback</div>
+                        <?php endif; ?>
+
+                        <p class="card-text small text-muted mb-3"><?php echo substr($row['description'], 0, 100); ?>...
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <?php if (!empty($row['coupon_code'])): ?>
+                            <span class="coupon-code"><?php echo $row['coupon_code']; ?></span>
+                            <?php else: ?>
+                            <span class="text-muted">No Code Required</span>
+                            <?php endif; ?>
+
+                            <a href="<?php echo $row['website_url']; ?>" target="_blank"
+                                class="btn btn-sm btn-danger get-coupon-btn" data-coupon-id="<?php echo $row['id']; ?>"
+                                data-coupon-code="<?php echo $row['coupon_code']; ?>"
+                                data-store-url="<?php echo $row['website_url']; ?>">
+                                Get Deal
+                            </a>
+                        </div>
                     </div>
-                    <?php
+                    <div class="card-footer bg-white text-muted small">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Expires: <?php echo date('M d, Y', strtotime($row['expiry_date'])); ?></span>
+                            <span><i class="fas fa-users me-1"></i> <?php echo rand(10, 100); ?> used today</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php
                 }
             }
             ?>
@@ -292,4 +296,3 @@
 </section>
 
 <?php include 'includes/footer.php'; ?>
-

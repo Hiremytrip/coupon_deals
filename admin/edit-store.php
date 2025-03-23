@@ -11,6 +11,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
 $error = '';
 $success = '';
 
+// Function to sanitize input (if not already defined)
+if (!function_exists('sanitize')) {
+    function sanitize($data) {
+        $data = trim($data);
+        $data = stripslashes($data);
+        $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+        return $data;
+    }
+}
+
 // Check if ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     header("Location: stores.php");
@@ -67,10 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $is_featured = isset($_POST['is_featured']) ? 1 : 0;
     $status = sanitize($_POST['status']);
     $category_ids = isset($_POST['categories']) ? $_POST['categories'] : [];
+    $storage_type = isset($_POST['storage_type']) ? sanitize($_POST['storage_type']) : 'file';
     
     // Generate slug if not provided
     if (empty($slug)) {
         $slug = strtolower(str_replace(' ', '-', $name));
+        // Remove any non-alphanumeric characters except hyphens
+        $slug = preg_replace('/[^a-z0-9-]/', '', $slug);
+        // Remove multiple hyphens
+        $slug = preg_replace('/-+/', '-', $slug);
     }
     
     // Validate input
@@ -89,62 +104,121 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             // Handle logo upload
             $logo = $store['logo']; // Keep existing logo by default
+            $logo_data = null; // For database storage
+            $logo_updated = false;
+            
             if (isset($_FILES['logo']) && $_FILES['logo']['error'] == 0) {
-                $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                 $filename = $_FILES['logo']['name'];
-                $ext = pathinfo($filename, PATHINFO_EXTENSION);
+                $filesize = $_FILES['logo']['size'];
+                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                 
-                if (in_array(strtolower($ext), $allowed)) {
-                    $new_filename = $slug . '.' . $ext;
+                // Validate file type and size
+                if (!in_array($ext, $allowed)) {
+                    $error = "Invalid file type. Allowed types: " . implode(', ', $allowed);
+                } elseif ($filesize > 5242880) { // 5MB max
+                    $error = "File size too large. Maximum size is 5MB.";
+                } else {
+                    // Create unique filename
+                    $new_filename = $slug . '-' . time() . '.' . $ext;
                     $upload_path = '../assets/images/stores/' . $new_filename;
                     
-                    if (move_uploaded_file($_FILES['logo']['tmp_name'], $upload_path)) {
-                        $logo = $new_filename;
+                    // Process based on storage type
+                    if ($storage_type == 'file') {
+                        // File system storage
+                        if (move_uploaded_file($_FILES['logo']['tmp_name'], $upload_path)) {
+                            // Resize image if needed
+                            if (function_exists('imagecreatefromjpeg')) {
+                                resizeImage($upload_path, $upload_path, 300, 300, $ext);
+                            }
+                            
+                            // Delete old logo if it exists and is different
+                            if (!empty($store['logo']) && $store['logo'] != $new_filename && file_exists('../assets/images/stores/' . $store['logo'])) {
+                                unlink('../assets/images/stores/' . $store['logo']);
+                            }
+                            
+                            $logo = $new_filename;
+                            $logo_updated = true;
+                        } else {
+                            $error = "Error uploading logo.";
+                        }
                     } else {
-                        $error = "Error uploading logo.";
+                        // Database storage
+                        $logo_data = file_get_contents($_FILES['logo']['tmp_name']);
+                        $logo = $new_filename; // Still store the filename for reference
+                        $logo_updated = true;
                     }
-                } else {
-                    $error = "Invalid file type. Allowed types: " . implode(', ', $allowed);
                 }
             }
             
             if (empty($error)) {
-                // Update store
-                $sql = "UPDATE stores SET name = ?, slug = ?, logo = ?, description = ?, website_url = ?, cashback_percent = ?, is_featured = ?, status = ? WHERE id = ?";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssssssdsi", $name, $slug, $logo, $description, $website_url, $cashback_percent, $is_featured, $status, $id);
+                // Update store - SIMPLIFIED APPROACH
+                $updateSuccess = false;
                 
-                if ($stmt->execute()) {
+                // Basic store information update (without logo_data)
+                $sql = "UPDATE stores SET 
+                        name = '" . $conn->real_escape_string($name) . "',
+                        slug = '" . $conn->real_escape_string($slug) . "',
+                        description = '" . $conn->real_escape_string($description) . "',
+                        website_url = '" . $conn->real_escape_string($website_url) . "',
+                        cashback_percent = " . $cashback_percent . ",
+                        is_featured = " . $is_featured . ",
+                        status = '" . $conn->real_escape_string($status) . "'";
+                
+                // Add logo to update if it was changed
+                if ($logo_updated) {
+                    $sql .= ", logo = '" . $conn->real_escape_string($logo) . "'";
+                }
+                
+                // Complete the query
+                $sql .= " WHERE id = " . $id;
+                
+                // Execute the update
+                if ($conn->query($sql)) {
+                    $updateSuccess = true;
+                    
+                    // If using database storage and we have logo data, update it separately
+                    if ($storage_type == 'database' && $logo_data !== null) {
+                        // Check if logo_data column exists
+                        $result = $conn->query("SHOW COLUMNS FROM stores LIKE 'logo_data'");
+                        if ($result->num_rows == 0) {
+                            // Column doesn't exist, create it
+                            $conn->query("ALTER TABLE stores ADD COLUMN logo_data MEDIUMBLOB");
+                        }
+                        
+                        // Prepare statement for binary data
+                        $logoStmt = $conn->prepare("UPDATE stores SET logo_data = ? WHERE id = ?");
+                        if ($logoStmt) {
+                            $null = NULL;
+                            $logoStmt->bind_param("bi", $null, $id);
+                            // Bind the binary data directly
+                            $logoStmt->send_long_data(0, $logo_data);
+                            $logoStmt->execute();
+                        }
+                    }
+                } else {
+                    $error = "Error updating store: " . $conn->error;
+                }
+                
+                // If store update was successful, handle categories
+                if ($updateSuccess) {
                     // Delete existing store categories
-                    $sql = "DELETE FROM store_categories WHERE store_id = ?";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("i", $id);
-                    $stmt->execute();
+                    $conn->query("DELETE FROM store_categories WHERE store_id = " . $id);
                     
                     // Insert store categories
                     if (!empty($category_ids)) {
                         $values = [];
-                        $types = '';
-                        $params = [];
-                        
                         foreach ($category_ids as $category_id) {
-                            $values[] = "(?, ?)";
-                            $types .= "ii";
-                            $params[] = $id;
-                            $params[] = $category_id;
+                            $category_id = (int)$category_id; // Ensure it's an integer
+                            $values[] = "(" . $id . ", " . $category_id . ")";
                         }
                         
-                        $sql = "INSERT INTO store_categories (store_id, category_id) VALUES " . implode(', ', $values);
-                        $stmt = $conn->prepare($sql);
-                        
-                        // Bind parameters dynamically
-                        $bind_params = array($types);
-                        foreach ($params as $key => $value) {
-                            $bind_params[] = &$params[$key];
+                        if (!empty($values)) {
+                            $sql = "INSERT INTO store_categories (store_id, category_id) VALUES " . implode(', ', $values);
+                            if (!$conn->query($sql)) {
+                                $error = "Warning: Not all categories were saved. " . $conn->error;
+                            }
                         }
-                        call_user_func_array(array($stmt, 'bind_param'), $bind_params);
-                        
-                        $stmt->execute();
                     }
                     
                     $success = "Store updated successfully!";
@@ -169,12 +243,108 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             $store_categories[] = $row['category_id'];
                         }
                     }
-                } else {
-                    $error = "Error: " . $stmt->error;
                 }
             }
         }
     }
+}
+
+// Function to resize image
+function resizeImage($source, $destination, $maxWidth, $maxHeight, $extension) {
+    // Check if GD library is available
+    if (!extension_loaded('gd') || !function_exists('imagecreatetruecolor')) {
+        return false;
+    }
+    
+    list($width, $height) = getimagesize($source);
+    
+    // Calculate new dimensions while maintaining aspect ratio
+    if ($width > $height) {
+        $newWidth = $maxWidth;
+        $newHeight = intval($height * $newWidth / $width);
+    } else {
+        $newHeight = $maxHeight;
+        $newWidth = intval($width * $newHeight / $height);
+    }
+    
+    // Create a new image with the new dimensions
+    $newImage = imagecreatetruecolor($newWidth, $newHeight);
+    
+    // Handle transparency for PNG and GIF
+    if ($extension == 'png' || $extension == 'gif') {
+        imagecolortransparent($newImage, imagecolorallocatealpha($newImage, 0, 0, 0, 127));
+        imagealphablending($newImage, false);
+        imagesavealpha($newImage, true);
+    }
+    
+    // Load the original image
+    $originalImage = null;
+    switch ($extension) {
+        case 'jpg':
+        case 'jpeg':
+            if (function_exists('imagecreatefromjpeg')) {
+                $originalImage = imagecreatefromjpeg($source);
+            }
+            break;
+        case 'png':
+            if (function_exists('imagecreatefrompng')) {
+                $originalImage = imagecreatefrompng($source);
+            }
+            break;
+        case 'gif':
+            if (function_exists('imagecreatefromgif')) {
+                $originalImage = imagecreatefromgif($source);
+            }
+            break;
+        case 'webp':
+            if (function_exists('imagecreatefromwebp')) {
+                $originalImage = imagecreatefromwebp($source);
+            }
+            break;
+        default:
+            return false;
+    }
+    
+    if (!$originalImage) {
+        return false;
+    }
+    
+    // Resize the image
+    imagecopyresampled($newImage, $originalImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+    
+    // Save the resized image
+    $result = false;
+    switch ($extension) {
+        case 'jpg':
+        case 'jpeg':
+            if (function_exists('imagejpeg')) {
+                $result = imagejpeg($newImage, $destination, 85);
+            }
+            break;
+        case 'png':
+            if (function_exists('imagepng')) {
+                $result = imagepng($newImage, $destination, 8);
+            }
+            break;
+        case 'gif':
+            if (function_exists('imagegif')) {
+                $result = imagegif($newImage, $destination);
+            }
+            break;
+        case 'webp':
+            if (function_exists('imagewebp')) {
+                $result = imagewebp($newImage, $destination, 85);
+            }
+            break;
+    }
+    
+    // Free up memory
+    if ($originalImage) {
+        imagedestroy($originalImage);
+    }
+    imagedestroy($newImage);
+    
+    return $result;
 }
 ?>
 <!DOCTYPE html>
@@ -189,6 +359,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            margin-top: 10px;
+        }
+        #preview-container {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container-fluid">
@@ -297,11 +481,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <label for="logo" class="form-label">Logo</label>
                                     <?php if (!empty($store['logo'])): ?>
                                         <div class="mb-2">
-                                            <img src="../assets/images/stores/<?php echo $store['logo']; ?>" alt="<?php echo $store['name']; ?>" width="100" class="img-thumbnail">
+                                            <?php if (isset($store['logo_data']) && !empty($store['logo_data'])): ?>
+                                                <img src="data:image/jpeg;base64,<?php echo base64_encode($store['logo_data']); ?>" alt="<?php echo $store['name']; ?>" width="100" class="img-thumbnail">
+                                            <?php else: ?>
+                                                <img src="../assets/images/stores/<?php echo $store['logo']; ?>" alt="<?php echo $store['name']; ?>" width="100" class="img-thumbnail">
+                                            <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
-                                    <input type="file" class="form-control" id="logo" name="logo">
-                                    <small class="text-muted">Leave empty to keep current logo</small>
+                                    <input type="file" class="form-control" id="logo" name="logo" accept="image/jpeg,image/png,image/gif,image/webp">
+                                    <small class="text-muted">Leave empty to keep current logo. Max size: 5MB</small>
+                                    <div id="preview-container">
+                                        <img id="image-preview" class="image-preview" src="#" alt="Preview">
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="status" class="form-label">Status*</label>
@@ -309,6 +500,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <option value="active" <?php echo $store['status'] == 'active' ? 'selected' : ''; ?>>Active</option>
                                         <option value="inactive" <?php echo $store['status'] == 'inactive' ? 'selected' : ''; ?>>Inactive</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Image Storage Type</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="storage_type" id="storage_file" value="file" checked>
+                                        <label class="form-check-label" for="storage_file">
+                                            Store in File System
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="storage_type" id="storage_db" value="database">
+                                        <label class="form-check-label" for="storage_db">
+                                            Store in Database
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -342,6 +550,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Image preview functionality
+        document.getElementById('logo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                const previewContainer = document.getElementById('preview-container');
+                const imagePreview = document.getElementById('image-preview');
+                
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Auto-generate slug from name
+        document.getElementById('name').addEventListener('keyup', function() {
+            const nameField = this;
+            const slugField = document.getElementById('slug');
+            
+            // Only auto-generate if slug field is empty or hasn't been manually edited
+            if (slugField.value === '' || slugField.dataset.autoGenerated === 'true') {
+                const slug = nameField.value.toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')   // Replace non-alphanumeric chars with hyphens
+                    .replace(/^-+|-+$/g, '')       // Remove leading/trailing hyphens
+                    .replace(/-+/g, '-');          // Replace multiple hyphens with single hyphen
+                
+                slugField.value = slug;
+                slugField.dataset.autoGenerated = 'true';
+            }
+        });
+        
+        // Mark slug as manually edited
+        document.getElementById('slug').addEventListener('input', function() {
+            this.dataset.autoGenerated = 'false';
+        });
+    </script>
 </body>
 </html>
-
